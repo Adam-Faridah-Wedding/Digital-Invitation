@@ -319,8 +319,9 @@ document.addEventListener("DOMContentLoaded", function () {
         anchor.click();
         window.URL.revokeObjectURL(url);
     };
+
     // ==========================================
-    // 10. FLOATING PARTICLES (HEARTS & FLOWERS)
+    // 10. FLOATING PARTICLES ON SCROLL
     // ==========================================
     function createParticle() {
         const container = document.getElementById('particles-container');
@@ -331,14 +332,13 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Randomly choose between a heart, flower, or sparkle
         const symbols = ['🤍', '🌸', '✨', '💖']; 
-        // Using emojis for lightweight performance
         particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
 
         // Random horizontal position across the screen width
         particle.style.left = Math.random() * 100 + 'vw';
         
-        // Randomize the animation duration so they float at different speeds (between 5s and 10s)
-        const duration = Math.random() * 5 + 5;
+        // Randomize the animation duration so they float up smoothly
+        const duration = Math.random() * 3 + 4;
         particle.style.animationDuration = duration + 's';
         
         // Randomize the size slightly
@@ -349,11 +349,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Remove the particle from the DOM after its animation finishes to prevent lag
         setTimeout(() => {
-            particle.remove();
+            if (particle.parentNode) {
+                particle.remove();
+            }
         }, duration * 1000);
     }
 
-    // Generate a new particle every 600 milliseconds
-    setInterval(createParticle, 600);
+    // Trigger particles specifically when the user scrolls
+    window.addEventListener('scroll', function () {
+        // Use Math.random to stagger them so they don't form a thick, laggy block of emojis
+        if (Math.random() > 0.6) {
+            createParticle();
+        }
+    });
 
 });
