@@ -319,4 +319,41 @@ document.addEventListener("DOMContentLoaded", function () {
         anchor.click();
         window.URL.revokeObjectURL(url);
     };
+    // ==========================================
+    // 10. FLOATING PARTICLES (HEARTS & FLOWERS)
+    // ==========================================
+    function createParticle() {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Randomly choose between a heart, flower, or sparkle
+        const symbols = ['🤍', '🌸', '✨', '💖', ' petals']; 
+        // Using emojis for lightweight performance
+        particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+
+        // Random horizontal position across the screen width
+        particle.style.left = Math.random() * 100 + 'vw';
+        
+        // Randomize the animation duration so they float at different speeds (between 5s and 10s)
+        const duration = Math.random() * 5 + 5;
+        particle.style.animationDuration = duration + 's';
+        
+        // Randomize the size slightly
+        const size = Math.random() * 0.5 + 0.8;
+        particle.style.transform = `scale(${size})`;
+
+        container.appendChild(particle);
+
+        // Remove the particle from the DOM after its animation finishes to prevent lag
+        setTimeout(() => {
+            particle.remove();
+        }, duration * 1000);
+    }
+
+    // Generate a new particle every 600 milliseconds
+    setInterval(createParticle, 600);
+
 });
