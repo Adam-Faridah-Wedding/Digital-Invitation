@@ -330,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function () {
         particle.classList.add('particle');
         
         // Randomly choose between a heart, flower, or sparkle
-        const symbols = ['🤍', '🌸', '✨', '💖', ' petals']; 
+        const symbols = ['🤍', '🌸', '✨', '💖']; 
         // Using emojis for lightweight performance
         particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
 
