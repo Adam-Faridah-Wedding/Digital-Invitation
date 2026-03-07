@@ -252,7 +252,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- 6. Modal and Menu Logic ---
     window.openModal = function (id) {
-        document.getElementById(id).style.display = 'flex';
+        const modal = document.getElementById(id);
+        modal.style.display = 'flex';
+
+        // Re-trigger fade-in animation for modal contents
+        const popOutContent = modal.querySelector('.modal-content');
+        if (popOutContent) {
+            popOutContent.style.animation = 'none';
+            popOutContent.offsetHeight; // trigger reflow
+            popOutContent.style.animation = null;
+        }
+
+        const fadeTexts = modal.querySelectorAll('.fade-text');
+        fadeTexts.forEach(text => {
+            text.style.animation = 'none';
+            text.offsetHeight; // trigger reflow
+            text.style.animation = null;
+        });
+
+        const modalContent = modal.querySelector('.modal-content');
+        const scrollElements = modal.querySelectorAll('.scroll-fade-in');
+
+        if (scrollElements.length > 0) {
+            const modalObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible-scroll');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { root: modalContent, rootMargin: '0px', threshold: 0.1 });
+
+            scrollElements.forEach(el => {
+                el.classList.remove('is-visible-scroll');
+                modalObserver.observe(el);
+            });
+        }
     };
 
     window.closeModal = function (id) {
