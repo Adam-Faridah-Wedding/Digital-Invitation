@@ -9,6 +9,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const RSVP_SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJOFur4mBgN40alI1bjQab2NY_NiEMFidveCCSZlJK8zAviOrwJ_Ib5T0bIXpLKQLBg1z0uXIGhqg4/pub?gid=1586273330&single=true&output=csv";
     const UCAPAN_SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJOFur4mBgN40alI1bjQab2NY_NiEMFidveCCSZlJK8zAviOrwJ_Ib5T0bIXpLKQLBg1z0uXIGhqg4/pub?gid=994849928&single=true&output=csv";
 
+
+    // ==========================================
+    // WEBSITE VISITOR COUNTER
+    // ==========================================
+    async function updateVisitCounter() {
+        try {
+            const response = await fetch("https://api.countapi.xyz/hit/faridah-adam-wedding/visits");
+            const data = await response.json();
+
+            const visitElement = document.getElementById("visit-count");
+            if (visitElement) {
+                visitElement.innerText = data.value;
+            }
+        } catch (error) {
+            console.error("Visitor counter error:", error);
+        }
+    }
+
+    updateVisitCounter();
+
+
     // ==========================================
     // 2. AUDIO & DOOR ANIMATION
     // ==========================================
