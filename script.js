@@ -1,6 +1,17 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // --- 1. Audio & Door Animation with Fade-in ---
+    // ==========================================
+    // 1. CONFIGURATION & LINKS
+    // ==========================================
+    const RSVP_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSccAH2fU-1i9wQ_lzV3SzBunerhPGaNpC1BYkvR12lo9LNqpQ/formResponse";
+    const UCAPAN_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSegChyvdI9HAHWUHmQa1wMFqwlfw8swzQh58L_23uR0_IpUvQ/formResponse";
+    
+    const RSVP_SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJOFur4mBgN40alI1bjQab2NY_NiEMFidveCCSZlJK8zAviOrwJ_Ib5T0bIXpLKQLBg1z0uXIGhqg4/pub?gid=1586273330&single=true&output=csv";
+    const UCAPAN_SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJOFur4mBgN40alI1bjQab2NY_NiEMFidveCCSZlJK8zAviOrwJ_Ib5T0bIXpLKQLBg1z0uXIGhqg4/pub?gid=994849928&single=true&output=csv";
+
+    // ==========================================
+    // 2. AUDIO & DOOR ANIMATION
+    // ==========================================
     const openBtn = document.getElementById('open-btn');
     const doorOverlay = document.getElementById('door-overlay');
     const bgMusic = document.getElementById('bg-music');
@@ -12,7 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
         audioElement.play().then(() => {
             isPlaying = true;
             musicToggle.classList.remove('hidden');
-
             let currentVolume = 0;
             const targetVolume = 1;
             const intervalTime = 50;
@@ -26,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     clearInterval(fadeInterval);
                 }
             }, intervalTime);
-
         }).catch(e => console.log("Audio play failed:", e));
     }
 
@@ -34,11 +43,9 @@ document.addEventListener("DOMContentLoaded", function () {
         openBtn.addEventListener('click', function () {
             doorOverlay.classList.add('door-open');
             document.body.classList.remove('locked');
-
             if (bgMusic) {
                 fadeInAudio(bgMusic, 2000);
             }
-
             setTimeout(() => {
                 doorOverlay.style.display = 'none';
             }, 1500);
@@ -58,424 +65,252 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- 2. Scroll Animation Observer ---
-    const animatedElements = document.querySelectorAll('.animate-on-scroll');
-    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
-
-    const observerCallback = (entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    animatedElements.forEach(element => observer.observe(element));
-
-    setTimeout(() => {
-        animatedElements.forEach(element => {
-            const rect = element.getBoundingClientRect();
-            if (rect.top < window.innerHeight) {
-                element.classList.add('is-visible');
-            }
-        });
-    }, 100);
-
-    // --- 3. CSV Parser Helper Function ---
-    function parseCSV(str) {
-        const arr = [];
-        let quote = false;
-        let col, c;
-        for (let row = col = c = 0; c < str.length; c++) {
-            let cc = str[c], nc = str[c + 1];
-            arr[row] = arr[row] || [];
-            arr[row][col] = arr[row][col] || '';
-            if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
-            if (cc == '"') { quote = !quote; continue; }
-            if (cc == ',' && !quote) { ++col; continue; }
-            if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
-            if (cc == '\n' && !quote) { ++row; col = 0; continue; }
-            if (cc == '\r' && !quote) { ++row; col = 0; continue; }
-            arr[row][col] += cc;
-        }
-        return arr;
-    }
-
-    // --- 4. Fetch Real Wishes from Google Sheets ---
-    const googleSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlYvA3WnmjaEHiRdVmX9-5BoZnoffaJdKlto_vDdc0Pc9-mDulKpsgX_gILSKDtvHfH4RSpen0r_6S/pub?gid=300194188&single=true&output=csv";
-
-    function fetchWishes() {
-        const commentsContainer = document.getElementById('wishes-container');
-
-        if (!commentsContainer) return;
-
-        // Helper function to format the timestamp cleanly
-        function formatTimestamp(rawTimestamp) {
-            const parts = rawTimestamp.split(' ');
-            if (parts.length < 2) return ""; // Invalid date format
-            const datePart = parts[0]; // e.g., "3/3/2026"
-            const timePart = parts[1]; // e.g., "12:57:55"
-            const dateParts = datePart.split('/');
-            if (dateParts.length < 3) return ""; // Invalid date part format
-            const monthNames = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1])]} ${dateParts[2]}`;
-            let [hours, minutes] = timePart.split(':');
-            hours = parseInt(hours);
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // Handle '0' hour as '12'
-            return `${formattedDate}, ${hours}:${minutes} ${ampm}`;
-        }
-
-        fetch(googleSheetCSVUrl)
-            .then(response => response.text())
-            .then(csvText => {
-                if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html') || csvText.includes('pageUrl:')) {
-                    commentsContainer.innerHTML = `<div class="comment-item"><p class="wish-text">Ralat: Sila pastikan Sheet diterbitkan sebagai CSV.</p></div>`;
-                    return;
-                }
-
-                const rows = parseCSV(csvText).slice(1).reverse();
-                let html = '';
-
-                rows.forEach(columns => {
-                    if (columns.length >= 3) {
-                        const name = columns[1].trim();
-                        const message = columns[2].trim();
-                        const rawTime = columns[0].trim();
-                        const formattedTime = formatTimestamp(rawTime);
-                        const initial = name.charAt(0).toUpperCase(); // Extract first initial
-
-                        if (name && message) {
-                            html += `
-                            <div class="comment-item">
-                                <div class="comment-header"> <div class="profile-icon"><span>${initial}</span></div> <div class="comment-details">
-                                        <p class="wish-author">${name}</p>
-                                        <p class="comment-timestamp">${formattedTime}</p>
-                                    </div>
-                                </div>
-                                <p class="wish-text">${message}</p>
-                            </div>`;
-                        }
-                    }
-                });
-
-                if (html !== '') {
-                    commentsContainer.innerHTML = html;
-                } else {
-                    commentsContainer.innerHTML = `<div class="comment-item"><p class="wish-text">Belum ada ucapan.</p></div>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching wishes:', error);
-                if (commentsContainer) {
-                    commentsContainer.innerHTML = `<div class="comment-item"><p class="wish-text">Ralat memuat turun ucapan.</p></div>`;
-                }
-            });
-    }
-
-    fetchWishes();
-
-    // --- 5. Countdown and Total Pax Calculation ---
-    function startCountdown() {
-        const eventDate = new Date("April 26, 2026 11:30:00").getTime();
-        const countdownContainer = document.getElementById("countdown");
-
-        const countdownInterval = setInterval(function () {
-            const now = new Date().getTime();
-            const distance = eventDate - now;
-
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                document.getElementById("days").innerText = "00";
-                document.getElementById("hours").innerText = "00";
-                document.getElementById("minutes").innerText = "00";
-                document.getElementById("seconds").innerText = "00";
-                return;
-            }
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById("days").innerText = days.toString().padStart(2, '0');
-            document.getElementById("hours").innerText = hours.toString().padStart(2, '0');
-            document.getElementById("minutes").innerText = minutes.toString().padStart(2, '0');
-            document.getElementById("seconds").innerText = seconds.toString().padStart(2, '0');
-
-            // Set to urgent state (red and bold) if 49 days (7 weeks) or less remaining
-            if (days <= 49) {
-                countdownContainer.classList.add("countdown-urgent");
-            } else {
-                countdownContainer.classList.remove("countdown-urgent");
-            }
-        }, 1000);
-    }
-
-    startCountdown();
-
-    function fetchRSVPPax() {
-        const rsvpSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlYvA3WnmjaEHiRdVmX9-5BoZnoffaJdKlto_vDdc0Pc9-mDulKpsgX_gILSKDtvHfH4RSpen0r_6S/pub?gid=700668432&single=true&output=csv";
-
-        fetch(rsvpSheetCSVUrl)
-            .then(response => response.text())
-            .then(csvText => {
-                const rows = parseCSV(csvText).slice(1);
-                let hadirTotal = 0;
-                let tidakHadirTotal = 0;
-
-                rows.forEach(columns => {
-                    if (columns.length >= 4) {
-                        // Index 2 is Kehadiran, Index 3 is Jumlah Pax
-                        const kehadiran = columns[2] ? columns[2].trim().toLowerCase() : "";
-                        const paxStr = columns[3] ? columns[3].trim() : "0";
-                        const pax = parseInt(paxStr, 10) || 0;
-
-                        if (kehadiran === "hadir") {
-                            hadirTotal += pax;
-                        } else if (kehadiran === "tidak hadir" || kehadiran === "tidak") {
-                            tidakHadirTotal += (pax > 0 ? pax : 1);
-                        }
-                    }
-                });
-
-                document.getElementById('total-hadir').innerText = hadirTotal;
-                document.getElementById('total-tidak-hadir').innerText = tidakHadirTotal;
-            })
-            .catch(err => console.error("Error fetching RSVP totals:", err));
-    }
-
-    fetchRSVPPax();
-
-    // --- 6. Modal and Menu Logic ---
-    window.openModal = function (id) {
-        const modal = document.getElementById(id);
-        modal.style.display = 'flex';
-
-        // Re-trigger fade-in animation for modal contents
-        const popOutContent = modal.querySelector('.modal-content');
-        if (popOutContent) {
-            popOutContent.style.animation = 'none';
-            popOutContent.offsetHeight; // trigger reflow
-            popOutContent.style.animation = null;
-        }
-
-        const fadeTexts = modal.querySelectorAll('.fade-text');
-        fadeTexts.forEach(text => {
-            text.style.animation = 'none';
-            text.offsetHeight; // trigger reflow
-            text.style.animation = null;
-        });
-
-        const modalContent = modal.querySelector('.modal-content');
-        const scrollElements = modal.querySelectorAll('.scroll-fade-in');
-
-        if (scrollElements.length > 0) {
-            const modalObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible-scroll');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { root: modalContent, rootMargin: '0px', threshold: 0.1 });
-
-            scrollElements.forEach(el => {
-                el.classList.remove('is-visible-scroll');
-                modalObserver.observe(el);
-            });
+    // ==========================================
+    // 3. MODAL CONTROLS
+    // ==========================================
+    window.openModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
         }
     };
 
-    window.closeModal = function (id) {
-        document.getElementById(id).style.display = 'none';
+    window.closeModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
     };
 
-    // Close modal when clicking outside of the content box
+    // Close modal when clicking outside content
     window.onclick = function (event) {
         if (event.target.classList.contains('modal')) {
-            event.target.style.display = "none";
+            event.target.style.display = 'none';
         }
-    }
-
-    // Download Apple/Outlook Calendar Event (.ics)
-    window.downloadICS = function () {
-        const icsData = "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Walimatul Urus Faridah & Adam\nDTSTART:20260426T033000Z\nDTEND:20260426T080000Z\nLOCATION:No 147, Kg. Sg. Star, 34140 Rantau Panjang, Selama, Perak\nDESCRIPTION:Majlis Perkahwinan Teh Faridah & Adam Safwan\nEND:VEVENT\nEND:VCALENDAR";
-        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.setAttribute('download', 'majlis_perkahwinan.ics');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     };
 
-    // --- 7. Sparkling/Love Animation on Scroll ---
-    const particlesContainer = document.getElementById('particles-container');
-    let lastScrollTop = 0;
+    // ==========================================
+    // 4. DATA FETCHING (STATS & WISHES)
+    // ==========================================
+    async function updateGuestStatsAndWishes() {
+        try {
+            // Fetch RSVP Stats
+            const rsvpResponse = await fetch(RSVP_SHEET_CSV);
+            const rsvpText = await rsvpResponse.text();
+            const rsvpLines = rsvpText.split('\n').slice(1); // Skip header
 
-    window.addEventListener('scroll', function () {
-        let st = window.pageYOffset || document.documentElement.scrollTop;
-        if (Math.abs(st - lastScrollTop) > 30) {
-            createParticle();
-            lastScrollTop = st;
+            let countHadir = 0;
+            let countTidakHadir = 0;
+
+            rsvpLines.forEach(line => {
+                const cols = line.split(',');
+                if (cols.length >= 3) {
+                    const status = cols[2].trim();
+                    const pax = parseInt(cols[3]) || 0;
+                    
+                    if (status === "Hadir") {
+                        countHadir += pax;
+                    } else if (status === "Tidak Hadir") {
+                        countTidakHadir++;
+                    }
+                }
+            });
+
+            document.getElementById('total-hadir').innerText = countHadir;
+            document.getElementById('total-tidak-hadir').innerText = countTidakHadir;
+
+            // Fetch Wishes
+            const wishesResponse = await fetch(UCAPAN_SHEET_CSV);
+            const wishesText = await wishesResponse.text();
+            const wishesLines = wishesText.split('\n').slice(1).reverse(); // Newest first
+
+            const wishesContainer = document.getElementById('wishes-container');
+            wishesContainer.innerHTML = '';
+
+            wishesLines.forEach(line => {
+                const cols = line.split(',');
+                if (cols.length >= 3) {
+                    const name = cols[1].replace(/"/g, '').trim();
+                    const message = cols[2].replace(/"/g, '').trim();
+                    
+                    if (name && message) {
+                        const wishItem = document.createElement('div');
+                        wishItem.className = 'comment-item';
+                        wishItem.innerHTML = `
+                            <div class="comment-header">
+                                <div class="profile-icon"><span>${name.charAt(0).toUpperCase()}</span></div>
+                                <div class="comment-details">
+                                    <p class="wish-author">${name}</p>
+                                </div>
+                            </div>
+                            <p class="wish-text">${message}</p>
+                        `;
+                        wishesContainer.appendChild(wishItem);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Error loading sheet data:", error);
         }
-    });
-
-    function createParticle() {
-        if (!particlesContainer) return;
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-
-        const items = ['💖', '✨', '🌸', '💕'];
-        particle.innerText = items[Math.floor(Math.random() * items.length)];
-
-        particle.style.left = Math.random() * 100 + 'vw';
-        particle.style.animationDuration = (Math.random() * 2 + 3) + 's';
-        particle.style.fontSize = (Math.random() * 1 + 1) + 'rem';
-
-        particlesContainer.appendChild(particle);
-
-        setTimeout(() => {
-            particle.remove();
-        }, 5000);
     }
 
-    // --- 8. Modern Background Form Submissions (Fetch API) ---
-    const rsvpForm = document.getElementById('rsvp-form');
-    const rsvpBtn = document.getElementById('rsvp-btn');
+    // Load initial data
+    updateGuestStatsAndWishes();
 
+    // ==========================================
+    // 5. FORM SUBMISSIONS (GOOGLE FORMS)
+    // ==========================================
+    const rsvpForm = document.getElementById('rsvp-form');
     if (rsvpForm) {
         rsvpForm.addEventListener('submit', function (e) {
             e.preventDefault();
-
-            rsvpBtn.innerText = "Menghantar...";
-            rsvpBtn.disabled = true;
-
-            const rsvpURL = "https://docs.google.com/forms/d/e/1FAIpQLSdWogh4C8y7hR5Uif-gODe0IK9s92VFaj9WD2E3t3GLXF3Z2w/formResponse";
+            const btn = document.getElementById('rsvp-btn');
+            btn.innerText = "Menghantar...";
+            btn.disabled = true;
 
             const formData = new FormData(rsvpForm);
-            const data = new URLSearchParams();
-            for (const pair of formData) {
-                data.append(pair[0], pair[1]);
-            }
-
-            fetch(rsvpURL, {
+            fetch(RSVP_FORM_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: data
+                body: formData
             }).then(() => {
-                alert('Terima kasih! RSVP anda telah disimpan.');
+                alert("Terima kasih! RSVP anda telah berjaya dihantar.");
                 rsvpForm.reset();
-                rsvpBtn.innerText = "Hantar RSVP";
-                rsvpBtn.disabled = false;
+                btn.innerText = "Hantar RSVP";
+                btn.disabled = false;
                 closeModal('modal-rsvp');
-                // Refresh pax count after submission
-                fetchRSVPPax();
-            }).catch(error => {
-                alert('Ralat. Sila cuba lagi.');
-                rsvpBtn.innerText = "Hantar RSVP";
-                rsvpBtn.disabled = false;
+                setTimeout(updateGuestStatsAndWishes, 2000); // Refresh data
+            }).catch(err => {
+                alert("Ralat berlaku. Sila cuba lagi.");
+                btn.disabled = false;
             });
         });
     }
 
     const wishForm = document.getElementById('wish-form');
-    const wishBtn = document.getElementById('wish-btn');
-
     if (wishForm) {
         wishForm.addEventListener('submit', function (e) {
             e.preventDefault();
-
-            wishBtn.innerText = "Menghantar...";
-            wishBtn.disabled = true;
-
-            const ucapanURL = "https://docs.google.com/forms/d/e/1FAIpQLSe9x94PBLCzKXAcSVr2XNW3ZzDrIGBIyiUFgtVlIAryH4QINw/formResponse";
+            const btn = document.getElementById('wish-btn');
+            btn.innerText = "Menghantar...";
+            btn.disabled = true;
 
             const formData = new FormData(wishForm);
-            const data = new URLSearchParams();
-            for (const pair of formData) {
-                data.append(pair[0], pair[1]);
-            }
-
-            fetch(ucapanURL, {
+            fetch(UCAPAN_FORM_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: data
+                body: formData
             }).then(() => {
-                alert('Terima kasih atas ucapan manis anda!');
-                window.location.reload();
-
-            }).catch(error => {
-                alert('Ralat. Sila cuba lagi.');
-                wishBtn.innerText = "Hantar Ucapan";
-                wishBtn.disabled = false;
+                alert("Ucapan anda telah diterima! Terima kasih.");
+                wishForm.reset();
+                btn.innerText = "Hantar Ucapan";
+                btn.disabled = false;
+                setTimeout(updateGuestStatsAndWishes, 2000); // Refresh data
+            }).catch(err => {
+                alert("Ralat berlaku. Sila cuba lagi.");
+                btn.disabled = false;
             });
         });
     }
 
-    // --- 9. Pre-Wedding Gallery Slider ---
-    function initGallerySlider() {
-        const slides = document.querySelectorAll('.gallery-slide');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        let currentSlide = 0;
-        let slideInterval;
+    // ==========================================
+    // 6. GALLERY SLIDER
+    // ==========================================
+    const slides = document.querySelectorAll('.gallery-slide');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    let currentSlide = 0;
 
-        if (slides.length === 0) return;
-
-        function showSlide(index) {
-            slides.forEach((slide, i) => {
-                slide.classList.remove('active');
-                if (i === index) {
-                    slide.classList.add('active');
-                }
-            });
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % slides.length;
-            showSlide(currentSlide);
-        }
-
-        function prevSlide() {
-            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(currentSlide);
-        }
-
-        // Reset interval when user clicks manually so it doesn't double-skip
-        function resetInterval() {
-            clearInterval(slideInterval);
-            slideInterval = setInterval(nextSlide, 4000); // Auto slide every 4 seconds
-        }
-
-        if (nextBtn) {
-            nextBtn.addEventListener('click', function() {
-                nextSlide();
-                resetInterval();
-            });
-        }
-
-        if (prevBtn) {
-            prevBtn.addEventListener('click', function() {
-                prevSlide();
-                resetInterval();
-            });
-        }
-
-        // Start auto slide
-        slideInterval = setInterval(nextSlide, 4000);
+    function showSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[index].classList.add('active');
     }
 
-    initGallerySlider();
+    if (nextBtn && prevBtn) {
+        nextBtn.addEventListener('click', () => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        });
 
+        prevBtn.addEventListener('click', () => {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(currentSlide);
+        });
+    }
+
+    // Auto slide gallery
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }, 5000);
+
+    // ==========================================
+    // 7. COUNTDOWN TIMER
+    // ==========================================
+    const weddingDate = new Date("April 26, 2026 11:30:00").getTime();
+
+    const timerInterval = setInterval(function () {
+        const now = new Date().getTime();
+        const distance = weddingDate - now;
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("days").innerHTML = days.toString().padStart(2, '0');
+        document.getElementById("hours").innerHTML = hours.toString().padStart(2, '0');
+        document.getElementById("minutes").innerHTML = minutes.toString().padStart(2, '0');
+        document.getElementById("seconds").innerHTML = seconds.toString().padStart(2, '0');
+
+        if (distance < 0) {
+            clearInterval(timerInterval);
+            document.getElementById("countdown").innerHTML = "SELAMAT PENGANTIN BARU!";
+        }
+    }, 1000);
+
+    // ==========================================
+    // 8. SCROLL ANIMATIONS
+    // ==========================================
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-on-scroll').forEach(section => {
+        observer.observe(section);
+    });
+
+    // ==========================================
+    // 9. ICS CALENDAR DOWNLOAD
+    // ==========================================
+    window.downloadICS = function() {
+        const icsData = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "BEGIN:VEVENT",
+            "DTSTART:20260426T033000Z",
+            "DTEND:20260426T080000Z",
+            "SUMMARY:Walimatul Urus Faridah & Adam",
+            "DESCRIPTION:Majlis Perkahwinan Teh Faridah & Adam Safwan",
+            "LOCATION:No 147, Kg. Sg. Star, 34140 Rantau Panjang, Selama, Perak",
+            "END:VEVENT",
+            "END:VCALENDAR"
+        ].join("\n");
+
+        const blob = new Blob([icsData], { type: "text/calendar" });
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "Wedding_Faridah_Adam.ics";
+        anchor.click();
+        window.URL.revokeObjectURL(url);
+    };
 });
