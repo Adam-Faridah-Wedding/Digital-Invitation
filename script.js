@@ -90,27 +90,33 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // ==========================================
-    // 4. DATA FETCHING (STATS & WISHES)
+    // 4. DATA FETCHING (STATS & WISHES) - IMPROVED
     // ==========================================
     async function updateGuestStatsAndWishes() {
         try {
-            // Fetch RSVP Stats
+            // --- Fetch RSVP Stats ---
             const rsvpResponse = await fetch(RSVP_SHEET_CSV);
             const rsvpText = await rsvpResponse.text();
-            const rsvpLines = rsvpText.split('\n').slice(1); // Skip header
+            // Split by lines and remove empty lines
+            const rsvpLines = rsvpText.split(/\r?\n/).filter(line => line.trim() !== "").slice(1); 
 
             let countHadir = 0;
             let countTidakHadir = 0;
 
             rsvpLines.forEach(line => {
-                const cols = line.split(',');
+                // Use a helper to split CSV while ignoring commas inside quotes
+                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
                 if (cols.length >= 3) {
-                    const status = cols[2].trim();
-                    const pax = parseInt(cols[3]) || 0;
+                    // Clean the data: remove quotes and extra spaces
+                    const status = cols[2].replace(/"/g, '').trim();
+                    const paxValue = cols[3] ? cols[3].replace(/"/g, '').trim() : "1";
+                    const pax = parseInt(paxValue) || 0;
                     
-                    if (status === "Hadir") {
+                    // Case-insensitive check for better reliability
+                    if (status.toLowerCase() === "hadir") {
                         countHadir += pax;
-                    } else if (status === "Tidak Hadir") {
+                    } else if (status.toLowerCase().includes("tidak")) {
                         countTidakHadir++;
                     }
                 }
@@ -119,16 +125,16 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('total-hadir').innerText = countHadir;
             document.getElementById('total-tidak-hadir').innerText = countTidakHadir;
 
-            // Fetch Wishes
+            // --- Fetch Wishes (Ucapan) ---
             const wishesResponse = await fetch(UCAPAN_SHEET_CSV);
             const wishesText = await wishesResponse.text();
-            const wishesLines = wishesText.split('\n').slice(1).reverse(); // Newest first
+            const wishesLines = wishesText.split(/\r?\n/).filter(line => line.trim() !== "").slice(1).reverse();
 
             const wishesContainer = document.getElementById('wishes-container');
             wishesContainer.innerHTML = '';
 
             wishesLines.forEach(line => {
-                const cols = line.split(',');
+                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 if (cols.length >= 3) {
                     const name = cols[1].replace(/"/g, '').trim();
                     const message = cols[2].replace(/"/g, '').trim();
