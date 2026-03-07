@@ -690,33 +690,13 @@ section {
     width: 130px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
 }
-.visit-box {
-    background: #fff;
-    padding: 20px 15px;
-    border-radius: 12px;
-    border: 1px solid #ecc9c7;
-    width: 160px;
-    margin: 0 auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-}
 
 .pax-box span {
     font-size: 2.2rem;
     font-weight: bold;
 }
-.visit-box span {
-    font-size: 2.2rem;
-    font-weight: bold;
-    color: #c88691;
-}
 
 .pax-box p {
-    font-size: 0.85rem;
-    color: #7a6a6d;
-    margin-top: 5px;
-    font-weight: 600;
-}
-.visit-box p {
     font-size: 0.85rem;
     color: #7a6a6d;
     margin-top: 5px;
