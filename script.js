@@ -211,6 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 wishForm.reset();
                 btn.innerText = "Hantar Ucapan";
                 btn.disabled = false;
+                closeModal('modal-ucapan');
                 setTimeout(updateGuestStatsAndWishes, 2000); // Refresh data
             }).catch(err => {
                 alert("Ralat berlaku. Sila cuba lagi.");

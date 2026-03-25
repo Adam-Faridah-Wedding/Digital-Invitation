@@ -110,16 +110,7 @@
                     <p class="wish-text">"Memuat turun ucapan..."</p>
                 </div>
             </div>
-        </div>
-
-        <div class="container elegant-box" style="margin-top: 2rem;">
-            <h3>Tinggalkan Ucapan</h3>
-            <p class="intro-text">Tinggalkan ucapan buat pasangan pengantin.</p>
-            <form id="wish-form" class="custom-form">
-                <input type="text" name="entry.808098215" id="wish-name" placeholder="Nama Anda" required>
-                <textarea name="entry.1222384745" id="wish-message" placeholder="Tulis ucapan manis anda di sini..." rows="4" required></textarea>
-                <button type="submit" class="btn" id="wish-btn">Hantar Ucapan</button>
-            </form>
+            <button class="btn fade-text" onclick="openModal('modal-ucapan')" style="margin-top: 25px;">Tinggalkan Ucapan</button>
         </div>
     </section>
 
@@ -162,6 +153,19 @@
             <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Walimatul+Urus+Faridah+%26+Adam&dates=20260426T033000Z/20260426T080000Z&details=Majlis+Perkahwinan+Teh+Faridah+%26+Adam+Safwan&location=No+147,+Kg.+Sg.+Star,+34140+Rantau+Panjang,+Selama,+Perak"
                 target="_blank" class="btn fade-text">Simpan ke Google Calendar</a>
             <button onclick="downloadICS()" class="btn fade-text" style="margin-top: 15px;">Simpan ke Apple Calendar</button>
+        </div>
+    </div>
+
+    <div id="modal-ucapan" class="modal blur-bg">
+        <div class="modal-content pop-out">
+            <span class="close" onclick="closeModal('modal-ucapan')">×</span>
+            <h3 class="fade-text">Tinggalkan Ucapan</h3>
+            <p class="intro-text fade-text">Tinggalkan ucapan buat pasangan pengantin.</p>
+            <form id="wish-form" class="custom-form fade-text">
+                <input type="text" name="entry.808098215" id="wish-name" placeholder="Nama Anda" required>
+                <textarea name="entry.1222384745" id="wish-message" placeholder="Tulis ucapan manis anda di sini..." rows="4" required></textarea>
+                <button type="submit" class="btn" id="wish-btn">Hantar Ucapan</button>
+            </form>
         </div>
     </div>
 
