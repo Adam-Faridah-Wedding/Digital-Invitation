@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const wishesContainer = document.getElementById('wishes-container');
             wishesContainer.innerHTML = '';
+            
+            let hasValidWish = false;
 
             wishesLines.forEach(line => {
                 const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -140,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const message = cols[2].replace(/"/g, '').trim();
                     
                     if (name && message) {
+                        hasValidWish = true;
                         const wishItem = document.createElement('div');
                         wishItem.className = 'comment-item';
                         wishItem.innerHTML = `
@@ -155,6 +158,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             });
+
+            // If no valid wishes were found in the sheet, show a placeholder
+            if (!hasValidWish) {
+                wishesContainer.innerHTML = '<div class="comment-item" style="text-align: center; justify-content: center; background: transparent; box-shadow: none;"><p class="wish-text" style="font-style: italic; opacity: 0.7;">Be the first to leave a wish!</p></div>';
+            }
         } catch (error) {
             console.error("Error loading sheet data:", error);
         }
@@ -219,37 +227,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
-
-    // ==========================================
-    // 6. GALLERY SLIDER
-    // ==========================================
-    const slides = document.querySelectorAll('.gallery-slide');
-    const nextBtn = document.getElementById('next-btn');
-    const prevBtn = document.getElementById('prev-btn');
-    let currentSlide = 0;
-
-    function showSlide(index) {
-        slides.forEach(slide => slide.classList.remove('active'));
-        slides[index].classList.add('active');
-    }
-
-    if (nextBtn && prevBtn) {
-        nextBtn.addEventListener('click', () => {
-            currentSlide = (currentSlide + 1) % slides.length;
-            showSlide(currentSlide);
-        });
-
-        prevBtn.addEventListener('click', () => {
-            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(currentSlide);
-        });
-    }
-
-    // Auto slide gallery
-    setInterval(() => {
-        currentSlide = (currentSlide + 1) % slides.length;
-        showSlide(currentSlide);
-    }, 5000);
 
     // ==========================================
     // 7. COUNTDOWN TIMER
