@@ -321,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // ==========================================
-    // 10. FLOATING PARTICLES ON SCROLL
+    // 10. RANDOM FALLING PARTICLES (NO SCROLL REQUIRED)
     // ==========================================
     function createParticle() {
         const container = document.getElementById('particles-container');
@@ -337,13 +337,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // Random horizontal position across the screen width
         particle.style.left = Math.random() * 100 + 'vw';
         
-        // Randomize the animation duration so they float up smoothly
-        const duration = Math.random() * 3 + 4;
+        // Randomize the animation duration so they fall at different speeds (4 to 8 seconds)
+        const duration = Math.random() * 4 + 4;
         particle.style.animationDuration = duration + 's';
         
-        // Randomize the size slightly
-        const size = Math.random() * 0.5 + 0.8;
-        particle.style.transform = `scale(${size})`;
+        // Randomize the size slightly using font-size so it doesn't break the CSS transform
+        particle.style.fontSize = (Math.random() * 1 + 1) + 'rem';
 
         container.appendChild(particle);
 
@@ -355,12 +354,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }, duration * 1000);
     }
 
-    // Trigger particles specifically when the user scrolls
-    window.addEventListener('scroll', function () {
-        // Use Math.random to stagger them so they don't form a thick, laggy block of emojis
-        if (Math.random() > 0.6) {
-            createParticle();
-        }
-    });
+    // Generate particles at random continuous intervals
+    function randomParticleLoop() {
+        createParticle();
+        // Create a new particle every 300ms to 900ms randomly
+        const randomDelay = Math.random() * 600 + 300; 
+        setTimeout(randomParticleLoop, randomDelay);
+    }
+
+    // Start the falling effect immediately when the page loads
+    randomParticleLoop();
 
 });
