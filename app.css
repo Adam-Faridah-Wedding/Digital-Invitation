@@ -633,6 +633,26 @@ section {
     overflow-y: auto;
 }
 
+.modal-image-container {
+    margin: 10px 0 25px 0;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f2d1d5;
+}
+
+.modal-thumbnail {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+.whatsapp-btn i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
 .close {
     position: absolute;
     top: 15px;
