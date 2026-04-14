@@ -94,26 +94,63 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     async function updateGuestStatsAndWishes() {
         try {
+            // Helper function to parse CSV robustly handling newlines inside quotes
+            function parseCSV(text) {
+                const rows = [];
+                let currentRow = [];
+                let currentCell = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    const nextChar = text[i + 1];
+
+                    if (char === '"' && inQuotes && nextChar === '"') {
+                        currentCell += '"';
+                        i++;
+                    } else if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        currentRow.push(currentCell);
+                        currentCell = '';
+                    } else if (char === '\n' && !inQuotes) {
+                        currentRow.push(currentCell);
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentCell = '';
+                    } else if (char === '\r' && nextChar === '\n' && !inQuotes) {
+                        currentRow.push(currentCell);
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentCell = '';
+                        i++;
+                    } else {
+                        currentCell += char;
+                    }
+                }
+                
+                if (currentCell !== '' || currentRow.length > 0) {
+                    currentRow.push(currentCell);
+                    rows.push(currentRow);
+                }
+                
+                return rows;
+            }
+
             // --- Fetch RSVP Stats ---
             const rsvpResponse = await fetch(RSVP_SHEET_CSV);
             const rsvpText = await rsvpResponse.text();
-            // Split by lines and remove empty lines
-            const rsvpLines = rsvpText.split(/\r?\n/).filter(line => line.trim() !== "").slice(1); 
-
+            const rsvpData = parseCSV(rsvpText).slice(1); // skip header
+            
             let countHadir = 0;
             let countTidakHadir = 0;
 
-            rsvpLines.forEach(line => {
-                // Use a helper to split CSV while ignoring commas inside quotes
-                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                
+            rsvpData.forEach(cols => {
                 if (cols.length >= 3) {
-                    // Clean the data: remove quotes and extra spaces
-                    const status = cols[2].replace(/"/g, '').trim();
-                    const paxValue = cols[3] ? cols[3].replace(/"/g, '').trim() : "1";
+                    const status = cols[2].trim();
+                    const paxValue = cols[3] ? cols[3].trim() : "1";
                     const pax = parseInt(paxValue) || 0;
                     
-                    // Case-insensitive check for better reliability
                     if (status.toLowerCase() === "hadir") {
                         countHadir += pax;
                     } else if (status.toLowerCase().includes("tidak")) {
@@ -128,34 +165,35 @@ document.addEventListener("DOMContentLoaded", function () {
             // --- Fetch Wishes (Ucapan) ---
             const wishesResponse = await fetch(UCAPAN_SHEET_CSV);
             const wishesText = await wishesResponse.text();
-            const wishesLines = wishesText.split(/\r?\n/).filter(line => line.trim() !== "").slice(1).reverse();
+            const wishesData = parseCSV(wishesText).slice(1).filter(cols => cols.length >= 3).reverse();
 
             const wishesContainer = document.getElementById('wishes-container');
             wishesContainer.innerHTML = '';
             
             let hasValidWish = false;
 
-            wishesLines.forEach(line => {
-                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if (cols.length >= 3) {
-                    const name = cols[1].replace(/"/g, '').trim();
-                    const message = cols[2].replace(/"/g, '').trim();
+            wishesData.forEach(cols => {
+                const name = cols[1].trim();
+                const message = cols[2].trim();
+                
+                if (name && message) {
+                    hasValidWish = true;
+                    const wishItem = document.createElement('div');
+                    wishItem.className = 'comment-item';
                     
-                    if (name && message) {
-                        hasValidWish = true;
-                        const wishItem = document.createElement('div');
-                        wishItem.className = 'comment-item';
-                        wishItem.innerHTML = `
-                            <div class="comment-header">
-                                <div class="profile-icon"><span>${name.charAt(0).toUpperCase()}</span></div>
-                                <div class="comment-details">
-                                    <p class="wish-author">${name}</p>
-                                </div>
+                    // Replace newlines with <br> for HTML rendering
+                    const formattedMessage = message.replace(/\n/g, '<br>');
+
+                    wishItem.innerHTML = `
+                        <div class="comment-header">
+                            <div class="profile-icon"><span>${name.charAt(0).toUpperCase()}</span></div>
+                            <div class="comment-details">
+                                <p class="wish-author">${name}</p>
                             </div>
-                            <p class="wish-text">${message}</p>
-                        `;
-                        wishesContainer.appendChild(wishItem);
-                    }
+                        </div>
+                        <p class="wish-text">${formattedMessage}</p>
+                    `;
+                    wishesContainer.appendChild(wishItem);
                 }
             });
 
