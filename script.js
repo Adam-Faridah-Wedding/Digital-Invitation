@@ -372,9 +372,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Generate particles at random continuous intervals
     function randomParticleLoop() {
-        createParticle();
-        // Create a new particle every 300ms to 900ms randomly
-        const randomDelay = Math.random() * 600 + 300; 
+        // Only run if the document is not hidden to save resources
+        if (!document.hidden) {
+            createParticle();
+        }
+        // Create a new particle every 800ms to 1500ms to reduce DOM stress
+        const randomDelay = Math.random() * 700 + 800; 
         setTimeout(randomParticleLoop, randomDelay);
     }
 
